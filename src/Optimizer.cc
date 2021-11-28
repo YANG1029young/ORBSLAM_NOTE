@@ -46,6 +46,10 @@ void Optimizer::GlobalBundleAdjustemnt(Map* pMap, int nIterations, bool* pbStopF
 }
 
 
+/*
+优化目标：关键帧的位姿pose、地图点三维坐标————vertex
+优化约束：冲投影误差最小化————edge
+*/
 void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<MapPoint *> &vpMP,
                                  int nIterations, bool* pbStopFlag, const unsigned long nLoopKF, const bool bRobust)
 {
@@ -68,6 +72,7 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
     long unsigned int maxKFid = 0;
 
     // Set KeyFrame vertices
+    //添加关键帧位姿作为图的vertex
     for(size_t i=0; i<vpKFs.size(); i++)
     {
         KeyFrame* pKF = vpKFs[i];
@@ -86,6 +91,7 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
     const float thHuber3D = sqrt(7.815);
 
     // Set MapPoint vertices
+    //添加地图点作为图优化的vertex，并添加约束edge
     for(size_t i=0; i<vpMP.size(); i++)
     {
         MapPoint* pMP = vpMP[i];
@@ -102,6 +108,15 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
 
         int nEdges = 0;
         //SET EDGES
+        /*
+        添加边（约束）
+        每个三维点和对应的观测帧上的二维点都构成重投影误差的关系
+        for(每一个三维点){
+            for(对应的每一个观测帧pose){
+                edge(三维点，观测帧pose)：冲投影误差最小形成的约束
+            }
+        }
+        */
         for(map<KeyFrame*,size_t>::const_iterator mit=observations.begin(); mit!=observations.end(); mit++)
         {
 
@@ -120,8 +135,8 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
 
                 g2o::EdgeSE3ProjectXYZ* e = new g2o::EdgeSE3ProjectXYZ();
 
-                e->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(id)));
-                e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(pKF->mnId)));
+                e->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(id)));//三维点
+                e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(pKF->mnId)));//观测帧的pose
                 e->setMeasurement(obs);
                 const float &invSigma2 = pKF->mvInvLevelSigma2[kpUn.octave];
                 e->setInformation(Eigen::Matrix2d::Identity()*invSigma2);

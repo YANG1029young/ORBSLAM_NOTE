@@ -673,10 +673,10 @@ void Tracking::CreateInitialMapMonocular()
 
         MapPoint* pMP = new MapPoint(worldPos,pKFcur,mpMap);
 
-        pKFini->AddMapPoint(pMP,i);
+        pKFini->AddMapPoint(pMP,i); //地图点在KF中的保存方式：与特征点的index（i）mapping
         pKFcur->AddMapPoint(pMP,mvIniMatches[i]);
 
-        pMP->AddObservation(pKFini,i);
+        pMP->AddObservation(pKFini,i);//给每个地图点添加观测数据：观测帧和该点的index
         pMP->AddObservation(pKFcur,mvIniMatches[i]);
 
         pMP->ComputeDistinctiveDescriptors();
@@ -726,7 +726,7 @@ void Tracking::CreateInitialMapMonocular()
         }
     }
 
-    mpLocalMapper->InsertKeyFrame(pKFini);
+    mpLocalMapper->InsertKeyFrame(pKFini);//局部建图线程
     mpLocalMapper->InsertKeyFrame(pKFcur);
 
     mCurrentFrame.SetPose(pKFcur->GetPose());
