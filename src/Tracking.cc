@@ -700,7 +700,12 @@ void Tracking::CreateInitialMapMonocular()
     Optimizer::GlobalBundleAdjustemnt(mpMap,20);
 
     // Set median depth to 1
-    float medianDepth = pKFini->ComputeSceneMedianDepth(2);
+    // 步骤6：!!!将MapPoints的中值深度归一化到1，并归一化两帧之间变换
+    // 单目传感器无法恢复真实的深度，这里将点云中值深度（欧式距离，不是指z）归一化到1
+    // 评估关键帧场景深度，q=2表示中值
+
+    //以init帧作为参考，点云中值深度归一化，
+    float medianDepth = pKFini->ComputeSceneMedianDepth(2); //init帧相机坐标系下点云的中值深度
     float invMedianDepth = 1.0f/medianDepth;
 
     if(medianDepth<0 || pKFcur->TrackedMapPoints(1)<100)
@@ -711,11 +716,13 @@ void Tracking::CreateInitialMapMonocular()
     }
 
     // Scale initial baseline
+    // 根据点云归一化比例缩放平移量
     cv::Mat Tc2w = pKFcur->GetPose();
     Tc2w.col(3).rowRange(0,3) = Tc2w.col(3).rowRange(0,3)*invMedianDepth;
     pKFcur->SetPose(Tc2w);
 
     // Scale points
+    // 缩放地图点（三维点）
     vector<MapPoint*> vpAllMapPoints = pKFini->GetMapPointMatches();
     for(size_t iMP=0; iMP<vpAllMapPoints.size(); iMP++)
     {
