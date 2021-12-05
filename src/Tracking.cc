@@ -671,7 +671,7 @@ void Tracking::CreateInitialMapMonocular()
         //Create MapPoint.
         cv::Mat worldPos(mvIniP3D[i]);//mvIniP3D：init帧中顺序对应的3d点
 
-        MapPoint* pMP = new MapPoint(worldPos,pKFcur,mpMap);
+        MapPoint* pMP = new MapPoint(worldPos,pKFcur,mpMap); //参考帧为什么是当前关键帧?
 
         pKFini->AddMapPoint(pMP,i); //地图点在KF中的保存方式：与特征点的index（i）mapping
         pKFcur->AddMapPoint(pMP,mvIniMatches[i]);
@@ -700,6 +700,7 @@ void Tracking::CreateInitialMapMonocular()
     Optimizer::GlobalBundleAdjustemnt(mpMap,20);
 
     // Set median depth to 1
+    // 归一化处理
     float medianDepth = pKFini->ComputeSceneMedianDepth(2);
     float invMedianDepth = 1.0f/medianDepth;
 

@@ -248,6 +248,11 @@ float MapPoint::GetFoundRatio()
     return static_cast<float>(mnFound)/mnVisible;
 }
 
+/*对于一个map点应该只有一个描述子，但是有多个观测帧，选哪个？
+思路：选取一个描述子与其他描述子的平均距离最小，暴力匹配？
+以每一个描述子作为参考，计算所有描述子与其距离，找出中间那个
+对于所有的“中间那个”，最小的中间距离
+*/
 void MapPoint::ComputeDistinctiveDescriptors()
 {
     // Retrieve all observed descriptors
@@ -336,6 +341,15 @@ bool MapPoint::IsInKeyFrame(KeyFrame *pKF)
     return (mObservations.count(pKF));
 }
 
+/**
+ * @brief 更新平均观测方向以及观测距离范围
+ *
+ * 由于一个MapPoint会被许多相机观测到，因此在插入关键帧后，需要更新相应变量
+ * mNormalVector：3D点被观测的平均方向
+ * mfMaxDistance：观测到该3D点的最大距离
+ * mfMinDistance：观测到该3D点的最小距离
+ * @see III - C2.2 c2.4
+ */
 void MapPoint::UpdateNormalAndDepth()
 {
     map<KeyFrame*,size_t> observations;

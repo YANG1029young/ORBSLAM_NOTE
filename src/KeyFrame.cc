@@ -652,7 +652,7 @@ float KeyFrame::ComputeSceneMedianDepth(const int q)
         {
             MapPoint* pMP = mvpMapPoints[i];
             cv::Mat x3Dw = pMP->GetWorldPos();
-            float z = Rcw2.dot(x3Dw)+zcw;
+            float z = Rcw2.dot(x3Dw)+zcw; //维数不一致？ z:相机坐标系下的深度
             vDepths.push_back(z);
         }
     }
