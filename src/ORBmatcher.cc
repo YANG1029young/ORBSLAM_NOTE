@@ -36,7 +36,7 @@ namespace ORB_SLAM2
 
 const int ORBmatcher::TH_HIGH = 100;
 const int ORBmatcher::TH_LOW = 50;
-const int ORBmatcher::HISTO_LENGTH = 30;
+const int ORBmatcher::HISTO_LENGTH = 30; //角度直方图划分的数量
 
 ORBmatcher::ORBmatcher(float nnratio, bool checkOri): mfNNratio(nnratio), mbCheckOrientation(checkOri)
 {
@@ -156,6 +156,7 @@ bool ORBmatcher::CheckDistEpipolarLine(const cv::KeyPoint &kp1,const cv::KeyPoin
     return dsqr<3.84*pKF2->mvLevelSigma2[kp2.octave];
 }
 
+//暴力匹配kf和f中的词袋向量
 int ORBmatcher::SearchByBoW(KeyFrame* pKF,Frame &F, vector<MapPoint*> &vpMapPointMatches)
 {
     const vector<MapPoint*> vpMapPointsKF = pKF->GetMapPointMatches();
@@ -422,7 +423,7 @@ int ORBmatcher::SearchForInitialization(Frame &F1, Frame &F2, vector<cv::Point2f
         if(level1>0)        //只处理金字塔的第0层中提取的特征点，也就是原始图
             continue;
 
-        //获取一定窗口（半径）范围内F2的特征点，这里为了加速使用了grid网格，避免暴力匹配
+        //获取一定窗口（半径）范围内F2的特征点，这里为了加速使用了grid网格，避免暴力匹配,返回的是范围内的F2的kp的index
         vector<size_t> vIndices2 = F2.GetFeaturesInArea(vbPrevMatched[i1].x,vbPrevMatched[i1].y, windowSize,level1,level1);
 
         if(vIndices2.empty())
@@ -1333,6 +1334,7 @@ int ORBmatcher::SearchBySim3(KeyFrame *pKF1, KeyFrame *pKF2, vector<MapPoint*> &
     return nFound;
 }
 
+//以lastframe中mappoint为基准，在currentframe中寻找mapping点，th决定寻找半径
 int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, const float th, const bool bMono)
 {
     int nmatches = 0;
